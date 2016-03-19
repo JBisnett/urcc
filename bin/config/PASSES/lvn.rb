@@ -8,7 +8,7 @@ module PassModule
   class BasicBlock
     include Enumerable
     attr_reader :node
-    attr_reader :stmts, :val2expr, :expr2val
+    attr_reader :stmts, :val2expr, :expr2val, :val2rval
     attr_accessor :out
     attr_accessor :out_blocks
     def initialize s
@@ -18,6 +18,8 @@ module PassModule
       @out_blocks = []
       @val2expr = Hash.new
       @expr2val = Hash.new
+      @val2rval = Hash.new
+
     end
     def add_stmt chld
       stmts << chld
@@ -34,18 +36,36 @@ module PassModule
     def process
       stmts.select{|x| x.is_a? Ast::AssignStat}.each do |x|
         if x.rhs.instance_of? Ast::OpExpr
-          if x.rhs.rator == '+' || x.rhs.rator == '*'
-            expr = [x.rhs.rator] + [x.rhs.rand1.c_dump, x.rhs.rand2.c_dump].sort
-            @val2expr[x.lhs.c_dump] = expr
-            @expr2val[expr] = x.lhs.c_dump
+          expr = nil
+          rhs1 = x.rhs.rand1
+          rhs1 = @val2rval[rhs1.c_dump] if @val2rval[rhs1.c_dump] != nil
+          if x.rhs.is_binary?
+            rhs2 = x.rhs.rand2
+            rhs2 = @val2rval[rhs2.c_dump] if @val2rval[rhs2.c_dump] != nil
+
+            if x.rhs.rator == '+' || x.rhs.rator == '*'
+              expr = [x.rhs.rator] + [rhs1.c_dump, rhs2.c_dump].sort
+            else
+              expr = [x.rhs.rator] + [rhs1.c_dump, rhs2.c_dump]
+            end
           else
-            expr = [x.rhs.rator] + [x.rhs.rand1.c_dump, x.rhs.rand2.c_dump]
-            @val2expr[x.lhs.c_dump] = expr
-            @expr2val[expr] = x.lhs.c_dump
+            expr = [x.rhs.rator] + [rhs1]
+          end
+          if @expr2val[expr] != nil
+            new_val = Ast::AssignStat.new Ast::VarAcc.new(@expr2val[expr].var), Ast::VarAcc.new(x.lhs.var)
+            new_val.insert_me "after", x
+            x.detach_me
+          end
+          @val2expr[x.lhs.c_dump] = x.rhs
+          @expr2val[expr] = x.lhs
+        elsif x.rhs.instance_of? Ast::VarAcc
+          if @val2rval[x.rhs.c_dump] == nil
+            @val2rval[x.lhs.c_dump] = x.rhs
+          else
+            @val2rval[x.lhs.c_dump] = @val2rval[x.rhs.c_dump]
           end
         end
       end
-      puts @val2expr, @expr2val
     end
     def print
       each{|stmt| puts stmt.c_dump}
@@ -93,7 +113,7 @@ module PassModule
         start_bb stmt
       end
     end
-    
+
     # link all the basic blocks to their children
     def link_bbs
       basic_blocks.each do |bb|
@@ -112,7 +132,7 @@ module PassModule
       end
       @entry_bb = @labels["lbl_entry"]
     end
-    
+
     def initialize func_node
       @labels = Hash.new
       @cur_bb = nil
