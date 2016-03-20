@@ -1,42 +1,23 @@
+FOR ASSIGNMENT 4
+
 TO USE:
 run rake to install this version of urcc as a gem
 
-run urcc on whatever c file you want to generate the cfg for
-
-a file "cfg.png" will be created in that directory, 
-which is a graphviz generated visualization of the control flow graph
-
-dependencies:
-This depends on all dependencies listed, including a dependency to 
-the gem "ruby-graphviz". Notably this is NOT "graphviz", which is an abandoned
-gem. Please ensure you have installed "ruby-graphviz" before using this.
-
+run urcc on whatever c file you want to compile
 
 IMPLEMENTATION:
-Not a lot of crazy things here, just defined a basic block and function class
-and use the urcc defined classes to get enough information to implement a
-version of the algorithm in the book. 
+pass is in bin/config/PASSES/lvn.rb
 
-Each basic block is defined by the label
-to get into the block, an array of labels the block can exit to, and an array
-of instructions that make up the block. A function is made of an array of basic
-blocks which are stitched together to form a graph.
+Reused the BasicBlock creation for the CFG creator, so any errors there
+are likely due to that.
 
-Some shortcuts were made in the implementation that make this code only work
-for IR generated from C, namely that the code assumes that all functions are
-defined on level 1. As C does not have nested functions this is a sound
-assumption for this project.
+I probably abused the "c_dump" function to create a hash value, but it ended up 
+working out find so whatever. A better way would have been to define a hashing
+function for Node, though that might have been more tricky than it would have
+been worth. 
 
-Additionally I do not draw edges resulting from function calls, as this was not
-required either for this project.
+I didn't implement the steward extension
 
-The nodes in the CFG must be uniquely identifiable by their contents, so each
-node has a header which specifies which function it is from, and what label
-starts each block. The rest of the node is every assignment, function call, and
-return instruction that makes up the block in order.
-
-I made some changes to the repo, mainly to make the API easier to use, but
-also to access the true and false branches to a conditional branch, which as
-far as I am aware was difficult to do without the changes. Diffing this current
-branch with the master branch should reveal every change, though most of the
-work in done in bin/config/PASSES/cfg.rb
+All I did was replace a math expression with a variable which already stores
+it's value. I figured that this is all we really needed to do so I stopped
+there. It does handle commutivity however.

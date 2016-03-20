@@ -1,4 +1,8 @@
-
+task :test do |t|
+  opt_dir = "./tests/"
+  unopt_dir = "./unopt_tests/"
+  opt_files = Dir[opt_dir+"*.bin"]
+end
 
 task :config do |t|
 

@@ -54,10 +54,13 @@ module PassModule
           if @expr2val[expr] != nil
             new_val = Ast::AssignStat.new Ast::VarAcc.new(@expr2val[expr].var), Ast::VarAcc.new(x.lhs.var)
             new_val.insert_me "after", x
+            puts x.c_dump.chomp + " Reduced to: " + new_val.c_dump
             x.detach_me
+            @val2expr[new_val.lhs.c_dump] =  new_val.rhs
+          else
+            @val2expr[x.lhs.c_dump] = x.rhs
+            @expr2val[expr] = x.lhs
           end
-          @val2expr[x.lhs.c_dump] = x.rhs
-          @expr2val[expr] = x.lhs
         elsif x.rhs.instance_of? Ast::VarAcc
           if @val2rval[x.rhs.c_dump] == nil
             @val2rval[x.lhs.c_dump] = x.rhs
