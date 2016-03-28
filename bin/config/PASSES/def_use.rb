@@ -45,21 +45,40 @@ module PassModule
     end 
     def process_defs
 
-      def print_def_use a, use
+      def add_def a, use
         @output_defs[a.c_dump].each do |defi|
           @parent.def_use_list["[#{[a.c_dump, defi.c_dump, use.c_dump].map(&:chomp).join", "}]"] = true
         end
       end
       
-      select{|s| s.instance_of? Ast::AssignStat and s.lhs != nil}.each do |as|
-        if as.rhs.instance_of? Ast::VarAcc
-          print_def_use as.rhs, as
-        elsif as.rhs.instance_of? Ast::OpExpr
-          print_def_use as.rhs.rand1, as
-          print_def_use as.rhs.rand2, as
+      reject{|s| s.instance_of?(Ast::GotoStat) || s.instance_of?(Ast::LabelStat)}.each do |as|
+        if as.instance_of? Ast::AssignStat
+          if as.is_exp?  
+            if as.rhs.instance_of? Ast::Call
+              as.rhs.para_list_copy.each do |arg| 
+                add_def arg, as
+              end
+            else
+              puts "Not a call"
+            end
+          else
+            if as.rhs.instance_of? Ast::VarAcc
+              add_def as.rhs, as
+            elsif as.rhs.instance_of? Ast::OpExpr
+              if as.rhs.rand2 != nil
+                add_def as.rhs.rand1, as
+                add_def as.rhs.rand2, as
+              elsif
+                add_def as.rhs.rand1, as
+              end
+            end
+            @output_defs[as.lhs.c_dump] = [as] if as.instance_of? Ast::AssignStat
+          end
+        else
+          add_def as.expr, as if as.expr != nil
         end
-        @output_defs[as.lhs.c_dump] = [as]
       end
+      out_blocks.each{|chld| chld.add_input_hash @output_defs}
     end
     def print
       each{|stmt| puts stmt.c_dump}
@@ -124,7 +143,6 @@ module PassModule
         when "Ast::ReturnStat"
           @exit_bbs << bb
         end
-        bb.out_blocks.each{|chld| chld.add_input_hash bb.output_defs}
       end
       @entry_bb = @labels["lbl_entry"]
     end
