@@ -130,7 +130,7 @@ module PassModule
     end
 
     def print_def_use
-      @def_use_list.keys.each{|x| puts x}
+      @def_use_list.keys.each{|x| $f.puts x}
     end
 
     def do_def_use
@@ -144,8 +144,8 @@ module PassModule
         end
       end
       do_def_use_imp
-      @def_use_list.keys.each{|x| puts x}
-      puts
+      @def_use_list.keys.each{|x| $f.puts x}
+      $f.puts
     end
 
     def initialize func_node
@@ -163,6 +163,7 @@ module PassModule
   end
 
   Pass = Proc.new do |prog|
+    $f = File.open "defs.out", "w+"
     funcs = prog.children_copy.map do |chld|
       Function.new chld
     end
