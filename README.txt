@@ -20,5 +20,7 @@ is given the union of it's parents exposed definitions and outputs that union,
 with each of its own exposed definitions replacing those given. Each time I
 would run into a use of a variable I add that string to a set. I run
 this process until that set does not change, indicating that convergence 
-has been achieved.
+has been achieved. Then I print the set.
+
+I currently do not handle function parameters
 
