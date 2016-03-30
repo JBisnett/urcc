@@ -1,8 +1,0 @@
-[var_i, var_i = 0;, var_0 = var_i;]
-[var_0, var_0 = var_i;, var_cmp = (var_0 < 10);]
-[var_i, var_i = 0;, var_1 = var_i;]
-[var_1, var_1 = var_i;, var_inc = (var_1 + 1);]
-[var_inc, var_inc = (var_1 + 1);, var_i = var_inc;]
-[var_i, var_i = var_inc;, var_0 = var_i;]
-[var_i, var_i = var_inc;, var_1 = var_i;]
-
