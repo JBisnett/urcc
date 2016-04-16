@@ -162,8 +162,8 @@ module PassModule
         end
       end
       do_def_use_imp
-      @def_use_list.keys.each{|x| $f.puts x}
-      $f.puts
+      @def_use_list.keys.each{|x| puts x}
+      puts
     end
 
     def initialize func_node
