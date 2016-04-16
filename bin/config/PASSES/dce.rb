@@ -6,12 +6,13 @@ require "ruby-graphviz"
 module PassModule
   class BasicBlock
     include Enumerable
-    attr_reader :node
+    attr_reader :label
     attr_reader :stmts, :val2expr, :expr2val, :val2rval
     attr_accessor :output_defs, :input_defs
     attr_accessor :out
     attr_accessor :out_blocks
     attr_accessor :parent
+    attr_accessor :req_stmt
     def initialize s, p
       @label = s
       @stmts = []
@@ -23,6 +24,7 @@ module PassModule
       @output_defs = Hash.new {|hash, key| hash[key] = Array.new}
       @input_defs = Hash.new {|hash, key| hash[key] = Array.new}
       @parent = p
+      @req_stmt = []
     end
     def add_stmt chld
       stmts << chld
@@ -87,7 +89,7 @@ module PassModule
   end
 
   class Function
-    attr_reader :labels, :entry_bb, :exit_bbs, :val
+    attr_reader :labels, :entry_bb, :exit_bbs, :val, :outputs
     attr_accessor :def_use_list, :old_def_use_list
     include Enumerable
     def each (&block)
@@ -120,9 +122,13 @@ module PassModule
         fin_bb stmt
       when "Ast::ReturnStat"
         @cur_bb << stmt
+        @cur_bb.req_stmt << stmt
         fin_bb stmt
       when "Ast::AssignStat"
         @cur_bb << stmt
+        if stmt.rhs.instance_of? Ast::Call
+          @cur_bb.req_stmt << stmt
+        end
       when "Ast::LabelStat"
         start_bb stmt
       end
@@ -162,8 +168,22 @@ module PassModule
         end
       end
       do_def_use_imp
-      @def_use_list.keys.each{|x| puts x}
-      puts
+      #@def_use_list.keys.each{|x| puts x}
+      #puts
+    end
+
+    def req_stmts
+        basic_blocks.map do |bb|
+          bb.req_stmt
+        end.flatten
+    end
+
+    def print_bb_req_stmts
+      basic_blocks.each do |bb|
+        puts bb.label.c_dump
+        puts bb.req_stmt.map(&:c_dump)
+        puts
+      end
     end
 
     def initialize func_node
@@ -187,6 +207,9 @@ module PassModule
     end
     funcs.each do |func|
       func.do_def_use
+      puts func.val.c_dump
+      func.print_bb_req_stmts
+      puts
     end
   end
 end
