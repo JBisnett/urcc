@@ -15,6 +15,7 @@ module Ast
 
   # The root of all statment classes
   class Stat < Node
+    attr_accessor :basic_block
     def c_dump(level=0)
       return "  " *level
     end

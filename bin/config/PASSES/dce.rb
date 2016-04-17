@@ -10,21 +10,35 @@ module PassModule
     attr_reader :stmts, :val2expr, :expr2val, :val2rval
     attr_accessor :output_defs, :input_defs
     attr_accessor :out
-    attr_accessor :out_blocks
+    attr_accessor :out_blocks, :in_blocks
     attr_accessor :parent
-    attr_accessor :req_stmt
+    attr_accessor :stmt_req
+    attr_accessor :use2def
+    attr_reader :loc
     def initialize s, p
       @label = s
       @stmts = []
       @out = nil
       @out_blocks = []
+      @in_blocks = []
       @val2expr = Hash.new
       @expr2val = Hash.new
       @val2rval = Hash.new
       @output_defs = Hash.new {|hash, key| hash[key] = Array.new}
       @input_defs = Hash.new {|hash, key| hash[key] = Array.new}
       @parent = p
-      @req_stmt = []
+      @stmt_req = Hash.new
+      @use2def = Hash.new {|hash, key| hash[key] = Hash.new}
+    end
+    def unmark stmt
+      puts "potential error" if @stmt_req[stmt.c_dump] != nil
+      @stmt_req[stmt.c_dump] = :unnecissary
+    end
+    def mark_flow stmt
+      @stmt_req[stmt.c_dump] = :needed_for_flow if @stmt_req[stmt.c_dump] != :necissary
+    end
+    def mark stmt
+      @stmt_req[stmt.c_dump] = :necissary
     end
     def add_stmt chld
       stmts << chld
@@ -49,39 +63,80 @@ module PassModule
 
       def add_def a, use
         @output_defs[a.c_dump].each do |defi|
-          @parent.def_use_list["[#{[a.c_dump, defi.c_dump, use.c_dump].map(&:chomp).join", "}]"] = true
+          @parent.def_use_list["[#{[a.c_dump, defi.c_dump, use.c_dump].map(&:chomp).join", "}]"] = [a, defi, use]
+          @use2def[use.c_dump][defi.c_dump] = defi
         end
       end
-      
-      reject{|s| s.instance_of?(Ast::GotoStat) || s.instance_of?(Ast::LabelStat)}.each do |as|
+
+      reject{|s| s.instance_of?(Ast::LabelStat)}.each do |as|
         if as.instance_of? Ast::AssignStat
-          if as.is_exp?  
-            if as.rhs.instance_of? Ast::Call
-              as.rhs.para_list_copy.each do |arg| 
-                add_def arg, as
-              end
-            else
-              puts "Not a call"
+          if as.rhs.instance_of? Ast::Call
+            as.rhs.para_list_copy.each do |arg| 
+              add_def arg, as
             end
-          else
-            if as.rhs.instance_of? Ast::VarAcc
-              add_def as.rhs, as
-            elsif as.rhs.instance_of? Ast::OpExpr
-              if as.rhs.rand2 != nil
-                add_def as.rhs.rand1, as
-                add_def as.rhs.rand2, as
-              elsif
-                add_def as.rhs.rand1, as
-              end
+          elsif as.rhs.instance_of? Ast::VarAcc
+            add_def as.rhs, as
+          elsif as.rhs.instance_of? Ast::OpExpr
+            if as.rhs.rand2 != nil
+              add_def as.rhs.rand1, as
+              add_def as.rhs.rand2, as
+            elsif
+              add_def as.rhs.rand1, as
             end
-            @output_defs[as.lhs.c_dump] = [as] if as.instance_of? Ast::AssignStat
           end
+          @output_defs[as.lhs.c_dump] = [as] if as.lhs != nil
         else
           add_def as.expr, as if as.expr != nil
         end
       end
+      if out.instance_of?(Ast::GotoStat) && out.condition != nil
+        add_def out.condition, out
+      end
       out_blocks.each{|chld| chld.add_input_hash @output_defs}
     end
+
+    def start_infection 
+      #puts @stmt_req
+      @stmt_req.each do |key, val|
+        if val
+          @use2def[key].values.each do |defi|
+            defi.basic_block.infect defi
+          end
+        end
+      end
+    end
+
+    def infect stmt
+      if stmt_req[stmt.c_dump] != :necissary
+        mark stmt
+        hash = @use2def[stmt.c_dump]
+        hash.each do |dump, defi|
+          defi.basic_block.infect defi
+        end
+      end
+    end
+    
+    def infect_flow stmt
+      if stmt_req[stmt.c_dump] != :necissary
+        mark stmt
+        hash = @use2def[stmt.c_dump]
+        hash.each do |dump, defi|
+          defi.basic_block.infect defi
+        end
+      end
+    end
+
+    def purge_dead
+      @loc = 0
+      each do |stmt|
+        if @stmt_req[stmt.c_dump] != true
+          stmt.detach_me
+        else
+          @loc += 1
+        end
+      end
+    end
+
     def print
       each{|stmt| puts stmt.c_dump}
     end
@@ -89,7 +144,7 @@ module PassModule
   end
 
   class Function
-    attr_reader :labels, :entry_bb, :exit_bbs, :val, :outputs
+    attr_reader :labels, :entry_bb, :exit_bbs, :val
     attr_accessor :def_use_list, :old_def_use_list
     include Enumerable
     def each (&block)
@@ -119,18 +174,26 @@ module PassModule
     def process_stmt stmt
       case stmt.class.name
       when "Ast::GotoStat"
+        stmt.basic_block = @cur_bb
+        stmt.basic_block.mark_flow stmt
         fin_bb stmt
       when "Ast::ReturnStat"
         @cur_bb << stmt
-        @cur_bb.req_stmt << stmt
+        @cur_bb.mark stmt
+        stmt.basic_block = @cur_bb
         fin_bb stmt
       when "Ast::AssignStat"
         @cur_bb << stmt
+        stmt.basic_block = @cur_bb
         if stmt.rhs.instance_of? Ast::Call
-          @cur_bb.req_stmt << stmt
+          stmt.basic_block.mark stmt
+        else
+          stmt.basic_block.unmark stmt
         end
       when "Ast::LabelStat"
         start_bb stmt
+        stmt.basic_block = @cur_bb
+        stmt.basic_block.mark_flow stmt
       end
     end
 
@@ -143,8 +206,11 @@ module PassModule
           if out_stmt.is_cond?
             bb.out_blocks = bb.out_blocks << @labels[bb.out.target_true]
             bb.out_blocks = bb.out_blocks <<  @labels[bb.out.target_false]
+            @labels[bb.out.target_true].in_blocks = @labels[bb.out.target_true].in_blocks << bb
+            @labels[bb.out.target_false].in_blocks = @labels[bb.out.target_false].in_blocks << bb
           else
-            bb.out_blocks = bb.out_blocks <<  @labels[bb.out.target]
+            bb.out_blocks = bb.out_blocks << @labels[bb.out.target]
+            @labels[bb.out.target].in_blocks = @labels[bb.out.target].in_blocks << bb
           end
         when "Ast::ReturnStat"
           @exit_bbs << bb
@@ -154,7 +220,20 @@ module PassModule
     end
 
     def print_def_use
-      @def_use_list.keys.each{|x| $f.puts x}
+      @def_use_list.keys.each{|x| puts x}
+      puts
+      #basic_blocks.each do |bb|
+      #  puts bb.use2def.map{|key, val| [key, val].join(",")}
+      #end
+    end
+
+    def print_stmt_req
+      each do |bb|
+        bb.stmt_req.each do |key, val|
+          puts [val,key].join("\t")
+        end
+        puts
+      end
     end
 
     def do_def_use
@@ -171,19 +250,18 @@ module PassModule
       #@def_use_list.keys.each{|x| puts x}
       #puts
     end
-
-    def req_stmts
-        basic_blocks.map do |bb|
-          bb.req_stmt
-        end.flatten
-    end
-
-    def print_bb_req_stmts
-      basic_blocks.each do |bb|
-        puts bb.label.c_dump
-        puts bb.req_stmt.map(&:c_dump)
-        puts
+    #make this iterative too
+    def do_dead_code_elim
+      def dce_imp bb
+        bb.start_infection
       end
+      each do |bb|
+        dce_imp bb
+      end
+      each do |bb|
+        bb.purge_dead
+      end
+      puts "New number of lines #{inject(0) do |sum, bb| sum + bb.loc end}"
     end
 
     def initialize func_node
@@ -207,8 +285,9 @@ module PassModule
     end
     funcs.each do |func|
       func.do_def_use
-      puts func.val.c_dump
-      func.print_bb_req_stmts
+      func.print_def_use
+      func.do_dead_code_elim
+      func.print_stmt_req
       puts
     end
   end

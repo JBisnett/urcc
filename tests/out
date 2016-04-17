@@ -1,0 +1,417 @@
+clang -O0 -emit-llvm -c trivia.c -o - | opt -reg2mem -S -o trivia.ll
+
+-------------------------
+Invoking dce Pass
+-------------------------
+
+[var_c, var_c = 500;, var_0 = var_c;]
+[var_c, var_c = 500;, var_1 = var_c;]
+[var_0, var_0 = var_c;, var_div = (var_0 / var_1);]
+[var_1, var_1 = var_c;, var_div = (var_0 / var_1);]
+[var_s, var_s = 0;, var_2 = var_s;]
+[var_2, var_2 = var_s;, var_div2 = (var_2 / var_div);]
+[var_div, var_div = (var_0 / var_1);, var_div2 = (var_2 / var_div);]
+[var_div2, var_div2 = (var_2 / var_div);, var_s = var_div2;]
+[var_c, var_c = 500;, var_3 = var_c;]
+[var_c, var_c = 500;, var_4 = var_c;]
+[var_3, var_3 = var_c;, var_add = (var_3 + var_4);]
+[var_4, var_4 = var_c;, var_add = (var_3 + var_4);]
+[var_s, var_s = var_div2;, var_5 = var_s;]
+[var_5, var_5 = var_s;, var_add3 = (var_5 + var_add);]
+[var_add, var_add = (var_3 + var_4);, var_add3 = (var_5 + var_add);]
+[var_add3, var_add3 = (var_5 + var_add);, var_s = var_add3;]
+[var_c, var_c = 500;, var_6 = var_c;]
+[var_6, var_6 = var_c;, var_div4 = (var_6 / var_7);]
+[var_7, var_7 = var_a;, var_div4 = (var_6 / var_7);]
+[var_s, var_s = var_add3;, var_8 = var_s;]
+[var_8, var_8 = var_s;, var_div5 = (var_8 / var_div4);]
+[var_div4, var_div4 = (var_6 / var_7);, var_div5 = (var_8 / var_div4);]
+[var_div5, var_div5 = (var_8 / var_div4);, var_s = var_div5;]
+[var_b, var_b = 50;, var_9 = var_b;]
+[var_c, var_c = 500;, var_10 = var_c;]
+[var_9, var_9 = var_b;, var_add6 = (var_9 + var_10);]
+[var_10, var_10 = var_c;, var_add6 = (var_9 + var_10);]
+[var_add6, var_add6 = (var_9 + var_10);, var_c = var_add6;]
+[var_b, var_b = 50;, var_11 = var_b;]
+[var_11, var_11 = var_b;, var_add7 = (var_11 + var_12);]
+[var_12, var_12 = var_a;, var_add7 = (var_11 + var_12);]
+[var_s, var_s = var_div5;, var_13 = var_s;]
+[var_13, var_13 = var_s;, var_add8 = (var_13 + var_add7);]
+[var_add7, var_add7 = (var_11 + var_12);, var_add8 = (var_13 + var_add7);]
+[var_add8, var_add8 = (var_13 + var_add7);, var_s = var_add8;]
+[var_b, var_b = 50;, var_14 = var_b;]
+[var_14, var_14 = var_b;, var_add9 = (var_14 + var_15);]
+[var_15, var_15 = var_a;, var_add9 = (var_14 + var_15);]
+[var_s, var_s = var_add8;, var_16 = var_s;]
+[var_16, var_16 = var_s;, var_add10 = (var_16 + var_add9);]
+[var_add9, var_add9 = (var_14 + var_15);, var_add10 = (var_16 + var_add9);]
+[var_add10, var_add10 = (var_16 + var_add9);, var_s = var_add10;]
+[var_b, var_b = 50;, var_17 = var_b;]
+[var_c, var_c = var_add6;, var_18 = var_c;]
+[var_17, var_17 = var_b;, var_add11 = (var_17 + var_18);]
+[var_18, var_18 = var_c;, var_add11 = (var_17 + var_18);]
+[var_s, var_s = var_add10;, var_19 = var_s;]
+[var_19, var_19 = var_s;, var_add12 = (var_19 + var_add11);]
+[var_add11, var_add11 = (var_17 + var_18);, var_add12 = (var_19 + var_add11);]
+[var_add12, var_add12 = (var_19 + var_add11);, var_s = var_add12;]
+[var_b, var_b = 50;, var_21 = var_b;]
+[var_20, var_20 = var_a;, var_add13 = (var_20 + var_21);]
+[var_21, var_21 = var_b;, var_add13 = (var_20 + var_21);]
+[var_s, var_s = var_add12;, var_22 = var_s;]
+[var_22, var_22 = var_s;, var_add14 = (var_22 + var_add13);]
+[var_add13, var_add13 = (var_20 + var_21);, var_add14 = (var_22 + var_add13);]
+[var_add14, var_add14 = (var_22 + var_add13);, var_s = var_add14;]
+[var_23, var_23 = var_a;, var_div15 = (var_23 / var_24);]
+[var_24, var_24 = var_a;, var_div15 = (var_23 / var_24);]
+[var_s, var_s = var_add14;, var_25 = var_s;]
+[var_25, var_25 = var_s;, var_div16 = (var_25 / var_div15);]
+[var_div15, var_div15 = (var_23 / var_24);, var_div16 = (var_25 / var_div15);]
+[var_div16, var_div16 = (var_25 / var_div15);, var_s = var_div16;]
+[var_b, var_b = 50;, var_26 = var_b;]
+[var_26, var_26 = var_b;, var_div17 = (var_26 / var_27);]
+[var_27, var_27 = var_a;, var_div17 = (var_26 / var_27);]
+[var_div17, var_div17 = (var_26 / var_27);, var_c = var_div17;]
+[var_b, var_b = 50;, var_28 = var_b;]
+[var_28, var_28 = var_b;, var_div18 = (var_28 / var_29);]
+[var_29, var_29 = var_a;, var_div18 = (var_28 / var_29);]
+[var_s, var_s = var_div16;, var_30 = var_s;]
+[var_30, var_30 = var_s;, var_div19 = (var_30 / var_div18);]
+[var_div18, var_div18 = (var_28 / var_29);, var_div19 = (var_30 / var_div18);]
+[var_div19, var_div19 = (var_30 / var_div18);, var_s = var_div19;]
+[var_c, var_c = var_div17;, var_31 = var_c;]
+[var_b, var_b = 50;, var_32 = var_b;]
+[var_31, var_31 = var_c;, var_add20 = (var_31 + var_32);]
+[var_32, var_32 = var_b;, var_add20 = (var_31 + var_32);]
+[var_s, var_s = var_div19;, var_33 = var_s;]
+[var_33, var_33 = var_s;, var_add21 = (var_33 + var_add20);]
+[var_add20, var_add20 = (var_31 + var_32);, var_add21 = (var_33 + var_add20);]
+[var_add21, var_add21 = (var_33 + var_add20);, var_s = var_add21;]
+[var_b, var_b = 50;, var_35 = var_b;]
+[var_34, var_34 = var_a;, var_add22 = (var_34 + var_35);]
+[var_35, var_35 = var_b;, var_add22 = (var_34 + var_35);]
+[var_s, var_s = var_add21;, var_36 = var_s;]
+[var_36, var_36 = var_s;, var_add23 = (var_36 + var_add22);]
+[var_add22, var_add22 = (var_34 + var_35);, var_add23 = (var_36 + var_add22);]
+[var_add23, var_add23 = (var_36 + var_add22);, var_s = var_add23;]
+[var_c, var_c = var_div17;, var_37 = var_c;]
+[var_37, var_37 = var_c;, var_add24 = (var_37 + var_38);]
+[var_38, var_38 = var_a;, var_add24 = (var_37 + var_38);]
+[var_s, var_s = var_add23;, var_39 = var_s;]
+[var_39, var_39 = var_s;, var_add25 = (var_39 + var_add24);]
+[var_add24, var_add24 = (var_37 + var_38);, var_add25 = (var_39 + var_add24);]
+[var_add25, var_add25 = (var_39 + var_add24);, var_s = var_add25;]
+[var_c, var_c = var_div17;, var_40 = var_c;]
+[var_c, var_c = var_div17;, var_41 = var_c;]
+[var_40, var_40 = var_c;, var_add26 = (var_40 + var_41);]
+[var_41, var_41 = var_c;, var_add26 = (var_40 + var_41);]
+[var_s, var_s = var_add25;, var_42 = var_s;]
+[var_42, var_42 = var_s;, var_add27 = (var_42 + var_add26);]
+[var_add26, var_add26 = (var_40 + var_41);, var_add27 = (var_42 + var_add26);]
+[var_add27, var_add27 = (var_42 + var_add26);, var_s = var_add27;]
+[var_c, var_c = var_div17;, var_43 = var_c;]
+[var_b, var_b = 50;, var_44 = var_b;]
+[var_43, var_43 = var_c;, var_add28 = (var_43 + var_44);]
+[var_44, var_44 = var_b;, var_add28 = (var_43 + var_44);]
+[var_s, var_s = var_add27;, var_45 = var_s;]
+[var_45, var_45 = var_s;, var_add29 = (var_45 + var_add28);]
+[var_add28, var_add28 = (var_43 + var_44);, var_add29 = (var_45 + var_add28);]
+[var_add29, var_add29 = (var_45 + var_add28);, var_s = var_add29;]
+[var_b, var_b = 50;, var_46 = var_b;]
+[var_46, var_46 = var_b;, var_add30 = (var_46 + var_47);]
+[var_47, var_47 = var_a;, var_add30 = (var_46 + var_47);]
+[var_add30, var_add30 = (var_46 + var_47);, var_c = var_add30;]
+[var_c, var_c = var_add30;, var_48 = var_c;]
+[var_b, var_b = 50;, var_49 = var_b;]
+[var_48, var_48 = var_c;, var_div31 = (var_48 / var_49);]
+[var_49, var_49 = var_b;, var_div31 = (var_48 / var_49);]
+[var_s, var_s = var_add29;, var_50 = var_s;]
+[var_50, var_50 = var_s;, var_div32 = (var_50 / var_div31);]
+[var_div31, var_div31 = (var_48 / var_49);, var_div32 = (var_50 / var_div31);]
+[var_div32, var_div32 = (var_50 / var_div31);, var_s = var_div32;]
+[var_c, var_c = var_add30;, var_51 = var_c;]
+[var_51, var_51 = var_c;, var_add33 = (var_51 + var_52);]
+[var_52, var_52 = var_a;, var_add33 = (var_51 + var_52);]
+[var_add33, var_add33 = (var_51 + var_52);, var_b = var_add33;]
+[var_b, var_b = var_add33;, var_53 = var_b;]
+[var_53, var_53 = var_b;, var_div34 = (var_53 / var_54);]
+[var_54, var_54 = var_a;, var_div34 = (var_53 / var_54);]
+[var_s, var_s = var_div32;, var_55 = var_s;]
+[var_55, var_55 = var_s;, var_div35 = (var_55 / var_div34);]
+[var_div34, var_div34 = (var_53 / var_54);, var_div35 = (var_55 / var_div34);]
+[var_div35, var_div35 = (var_55 / var_div34);, var_s = var_div35;]
+[var_b, var_b = var_add33;, var_57 = var_b;]
+[var_56, var_56 = var_a;, var_add36 = (var_56 + var_57);]
+[var_57, var_57 = var_b;, var_add36 = (var_56 + var_57);]
+[var_s, var_s = var_div35;, var_58 = var_s;]
+[var_58, var_58 = var_s;, var_add37 = (var_58 + var_add36);]
+[var_add36, var_add36 = (var_56 + var_57);, var_add37 = (var_58 + var_add36);]
+[var_add37, var_add37 = (var_58 + var_add36);, var_s = var_add37;]
+[var_c, var_c = var_add30;, var_59 = var_c;]
+[var_b, var_b = var_add33;, var_60 = var_b;]
+[var_59, var_59 = var_c;, var_add38 = (var_59 + var_60);]
+[var_60, var_60 = var_b;, var_add38 = (var_59 + var_60);]
+[var_s, var_s = var_add37;, var_61 = var_s;]
+[var_61, var_61 = var_s;, var_add39 = (var_61 + var_add38);]
+[var_add38, var_add38 = (var_59 + var_60);, var_add39 = (var_61 + var_add38);]
+[var_add39, var_add39 = (var_61 + var_add38);, var_s = var_add39;]
+[var_c, var_c = var_add30;, var_62 = var_c;]
+[var_62, var_62 = var_c;, var_add40 = (var_62 + var_63);]
+[var_63, var_63 = var_a;, var_add40 = (var_62 + var_63);]
+[var_s, var_s = var_add39;, var_64 = var_s;]
+[var_64, var_64 = var_s;, var_add41 = (var_64 + var_add40);]
+[var_add40, var_add40 = (var_62 + var_63);, var_add41 = (var_64 + var_add40);]
+[var_add41, var_add41 = (var_64 + var_add40);, var_s = var_add41;]
+[var_65, var_65 = var_a;, var_add42 = (var_65 + var_66);]
+[var_66, var_66 = var_a;, var_add42 = (var_65 + var_66);]
+[var_add42, var_add42 = (var_65 + var_66);, var_c = var_add42;]
+[var_c, var_c = var_add42;, var_68 = var_c;]
+[var_67, var_67 = var_a;, var_add43 = (var_67 + var_68);]
+[var_68, var_68 = var_c;, var_add43 = (var_67 + var_68);]
+[var_s, var_s = var_add41;, var_69 = var_s;]
+[var_69, var_69 = var_s;, var_add44 = (var_69 + var_add43);]
+[var_add43, var_add43 = (var_67 + var_68);, var_add44 = (var_69 + var_add43);]
+[var_add44, var_add44 = (var_69 + var_add43);, var_s = var_add44;]
+[var_b, var_b = var_add33;, var_70 = var_b;]
+[var_70, var_70 = var_b;, var_add45 = (var_70 + var_71);]
+[var_71, var_71 = var_a;, var_add45 = (var_70 + var_71);]
+[var_add45, var_add45 = (var_70 + var_71);, var_c = var_add45;]
+[var_72, var_72 = var_a;, var_add46 = (var_72 + var_73);]
+[var_73, var_73 = var_a;, var_add46 = (var_72 + var_73);]
+[var_s, var_s = var_add44;, var_74 = var_s;]
+[var_74, var_74 = var_s;, var_add47 = (var_74 + var_add46);]
+[var_add46, var_add46 = (var_72 + var_73);, var_add47 = (var_74 + var_add46);]
+[var_add47, var_add47 = (var_74 + var_add46);, var_s = var_add47;]
+[var_b, var_b = var_add33;, var_75 = var_b;]
+[var_75, var_75 = var_b;, var_div48 = (var_75 / var_76);]
+[var_76, var_76 = var_a;, var_div48 = (var_75 / var_76);]
+[var_div48, var_div48 = (var_75 / var_76);, var_c = var_div48;]
+[var_b, var_b = var_add33;, var_77 = var_b;]
+[var_c, var_c = var_div48;, var_78 = var_c;]
+[var_77, var_77 = var_b;, var_div49 = (var_77 / var_78);]
+[var_78, var_78 = var_c;, var_div49 = (var_77 / var_78);]
+[var_div49, var_div49 = (var_77 / var_78);, var_c = var_div49;]
+[var_c, var_c = var_div49;, var_80 = var_c;]
+[var_79, var_79 = var_a;, var_div50 = (var_79 / var_80);]
+[var_80, var_80 = var_c;, var_div50 = (var_79 / var_80);]
+[var_div50, var_div50 = (var_79 / var_80);, var_a = var_div50;]
+[var_b, var_b = var_add33;, var_81 = var_b;]
+[var_a, var_a = var_div50;, var_82 = var_a;]
+[var_81, var_81 = var_b;, var_add51 = (var_81 + var_82);]
+[var_82, var_82 = var_a;, var_add51 = (var_81 + var_82);]
+[var_s, var_s = var_add47;, var_83 = var_s;]
+[var_83, var_83 = var_s;, var_add52 = (var_83 + var_add51);]
+[var_add51, var_add51 = (var_81 + var_82);, var_add52 = (var_83 + var_add51);]
+[var_add52, var_add52 = (var_83 + var_add51);, var_s = var_add52;]
+[var_s, var_s = var_add52;, var_84 = var_s;]
+[var_84, var_84 = var_s;, var_call53 = printf((& str2[0]), var_84);]
+[var_a, var_a = var_div50;, var_7 = var_a;]
+[var_a, var_a = var_div50;, var_12 = var_a;]
+[var_a, var_a = var_div50;, var_15 = var_a;]
+[var_a, var_a = var_div50;, var_20 = var_a;]
+[var_a, var_a = var_div50;, var_23 = var_a;]
+[var_a, var_a = var_div50;, var_24 = var_a;]
+[var_a, var_a = var_div50;, var_27 = var_a;]
+[var_a, var_a = var_div50;, var_29 = var_a;]
+[var_a, var_a = var_div50;, var_34 = var_a;]
+[var_a, var_a = var_div50;, var_38 = var_a;]
+[var_a, var_a = var_div50;, var_47 = var_a;]
+[var_a, var_a = var_div50;, var_52 = var_a;]
+[var_a, var_a = var_div50;, var_54 = var_a;]
+[var_a, var_a = var_div50;, var_56 = var_a;]
+[var_a, var_a = var_div50;, var_63 = var_a;]
+[var_a, var_a = var_div50;, var_65 = var_a;]
+[var_a, var_a = var_div50;, var_66 = var_a;]
+[var_a, var_a = var_div50;, var_67 = var_a;]
+[var_a, var_a = var_div50;, var_71 = var_a;]
+[var_a, var_a = var_div50;, var_72 = var_a;]
+[var_a, var_a = var_div50;, var_73 = var_a;]
+[var_a, var_a = var_div50;, var_76 = var_a;]
+[var_a, var_a = var_div50;, var_79 = var_a;]
+
+New number of lines 172
+true	lbl_entry:;
+false	var_reg2mem_alloca_point = 0;
+false	var_argc_addr = var_argc;
+false	var_argv_addr = var_argv;
+true	var_call = printf((& str[0]));
+true	var_call1 = __isoc99_scanf((& str1[0]), (& var_a));
+true	var_b = 50;
+true	var_c = 500;
+true	var_s = 0;
+true	var_0 = var_c;
+true	var_1 = var_c;
+true	var_div = (var_0 / var_1);
+true	var_2 = var_s;
+true	var_div2 = (var_2 / var_div);
+true	var_s = var_div2;
+true	var_3 = var_c;
+true	var_4 = var_c;
+true	var_add = (var_3 + var_4);
+true	var_5 = var_s;
+true	var_add3 = (var_5 + var_add);
+true	var_s = var_add3;
+true	var_6 = var_c;
+true	var_7 = var_a;
+true	var_div4 = (var_6 / var_7);
+true	var_8 = var_s;
+true	var_div5 = (var_8 / var_div4);
+true	var_s = var_div5;
+true	var_9 = var_b;
+true	var_10 = var_c;
+true	var_add6 = (var_9 + var_10);
+true	var_c = var_add6;
+true	var_11 = var_b;
+true	var_12 = var_a;
+true	var_add7 = (var_11 + var_12);
+true	var_13 = var_s;
+true	var_add8 = (var_13 + var_add7);
+true	var_s = var_add8;
+true	var_14 = var_b;
+true	var_15 = var_a;
+true	var_add9 = (var_14 + var_15);
+true	var_16 = var_s;
+true	var_add10 = (var_16 + var_add9);
+true	var_s = var_add10;
+true	var_17 = var_b;
+true	var_18 = var_c;
+true	var_add11 = (var_17 + var_18);
+true	var_19 = var_s;
+true	var_add12 = (var_19 + var_add11);
+true	var_s = var_add12;
+true	var_20 = var_a;
+true	var_21 = var_b;
+true	var_add13 = (var_20 + var_21);
+true	var_22 = var_s;
+true	var_add14 = (var_22 + var_add13);
+true	var_s = var_add14;
+true	var_23 = var_a;
+true	var_24 = var_a;
+true	var_div15 = (var_23 / var_24);
+true	var_25 = var_s;
+true	var_div16 = (var_25 / var_div15);
+true	var_s = var_div16;
+true	var_26 = var_b;
+true	var_27 = var_a;
+true	var_div17 = (var_26 / var_27);
+true	var_c = var_div17;
+true	var_28 = var_b;
+true	var_29 = var_a;
+true	var_div18 = (var_28 / var_29);
+true	var_30 = var_s;
+true	var_div19 = (var_30 / var_div18);
+true	var_s = var_div19;
+true	var_31 = var_c;
+true	var_32 = var_b;
+true	var_add20 = (var_31 + var_32);
+true	var_33 = var_s;
+true	var_add21 = (var_33 + var_add20);
+true	var_s = var_add21;
+true	var_34 = var_a;
+true	var_35 = var_b;
+true	var_add22 = (var_34 + var_35);
+true	var_36 = var_s;
+true	var_add23 = (var_36 + var_add22);
+true	var_s = var_add23;
+true	var_37 = var_c;
+true	var_38 = var_a;
+true	var_add24 = (var_37 + var_38);
+true	var_39 = var_s;
+true	var_add25 = (var_39 + var_add24);
+true	var_s = var_add25;
+true	var_40 = var_c;
+true	var_41 = var_c;
+true	var_add26 = (var_40 + var_41);
+true	var_42 = var_s;
+true	var_add27 = (var_42 + var_add26);
+true	var_s = var_add27;
+true	var_43 = var_c;
+true	var_44 = var_b;
+true	var_add28 = (var_43 + var_44);
+true	var_45 = var_s;
+true	var_add29 = (var_45 + var_add28);
+true	var_s = var_add29;
+true	var_46 = var_b;
+true	var_47 = var_a;
+true	var_add30 = (var_46 + var_47);
+true	var_c = var_add30;
+true	var_48 = var_c;
+true	var_49 = var_b;
+true	var_div31 = (var_48 / var_49);
+true	var_50 = var_s;
+true	var_div32 = (var_50 / var_div31);
+true	var_s = var_div32;
+true	var_51 = var_c;
+true	var_52 = var_a;
+true	var_add33 = (var_51 + var_52);
+true	var_b = var_add33;
+true	var_53 = var_b;
+true	var_54 = var_a;
+true	var_div34 = (var_53 / var_54);
+true	var_55 = var_s;
+true	var_div35 = (var_55 / var_div34);
+true	var_s = var_div35;
+true	var_56 = var_a;
+true	var_57 = var_b;
+true	var_add36 = (var_56 + var_57);
+true	var_58 = var_s;
+true	var_add37 = (var_58 + var_add36);
+true	var_s = var_add37;
+true	var_59 = var_c;
+true	var_60 = var_b;
+true	var_add38 = (var_59 + var_60);
+true	var_61 = var_s;
+true	var_add39 = (var_61 + var_add38);
+true	var_s = var_add39;
+true	var_62 = var_c;
+true	var_63 = var_a;
+true	var_add40 = (var_62 + var_63);
+true	var_64 = var_s;
+true	var_add41 = (var_64 + var_add40);
+true	var_s = var_add41;
+true	var_65 = var_a;
+true	var_66 = var_a;
+true	var_add42 = (var_65 + var_66);
+true	var_c = var_add42;
+true	var_67 = var_a;
+true	var_68 = var_c;
+true	var_add43 = (var_67 + var_68);
+true	var_69 = var_s;
+true	var_add44 = (var_69 + var_add43);
+true	var_s = var_add44;
+false	var_70 = var_b;
+false	var_71 = var_a;
+false	var_add45 = (var_70 + var_71);
+false	var_c = var_add45;
+true	var_72 = var_a;
+true	var_73 = var_a;
+true	var_add46 = (var_72 + var_73);
+true	var_74 = var_s;
+true	var_add47 = (var_74 + var_add46);
+true	var_s = var_add47;
+true	var_75 = var_b;
+true	var_76 = var_a;
+true	var_div48 = (var_75 / var_76);
+true	var_c = var_div48;
+true	var_77 = var_b;
+true	var_78 = var_c;
+true	var_div49 = (var_77 / var_78);
+true	var_c = var_div49;
+true	var_79 = var_a;
+true	var_80 = var_c;
+true	var_div50 = (var_79 / var_80);
+true	var_a = var_div50;
+true	var_81 = var_b;
+true	var_82 = var_a;
+true	var_add51 = (var_81 + var_82);
+true	var_83 = var_s;
+true	var_add52 = (var_83 + var_add51);
+true	var_s = var_add52;
+true	var_84 = var_s;
+true	var_call53 = printf((& str2[0]), var_84);
+true	return 0;
+
+
+
+-------------------------
+
+clang -O0 -Wno-format-security -Wno-implicit-function-declaration -g trivia_urcc_opt.c -o trivia.bin
