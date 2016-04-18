@@ -82,12 +82,11 @@ module PassModule
             end
           end
           @output_defs[as.lhs.c_dump] = [as] if as.lhs != nil
+        elsif out.instance_of?(Ast::GotoStat)
+          add_def out.condition, out if out.condition != nil
         else
           add_def as.expr, as if as.expr != nil
         end
-      end
-      if out.instance_of?(Ast::GotoStat) && out.condition != nil
-        add_def out.condition, out
       end
       out_blocks.each{|chld| chld.add_input_hash @output_defs}
     end
@@ -163,6 +162,7 @@ module PassModule
       when "Ast::GotoStat"
         stmt.basic_block = @cur_bb
         stmt.basic_block.mark stmt
+        @cur_bb << stmt
         fin_bb stmt
       when "Ast::ReturnStat"
         @cur_bb << stmt
@@ -248,7 +248,7 @@ module PassModule
       each do |bb|
         bb.purge_dead
       end
-      puts "New number of lines #{inject(0) do |sum, bb| sum + bb.loc end}"
+      inject(0) do |sum, bb| sum + bb.loc end
     end
 
     def initialize func_node
@@ -266,16 +266,12 @@ module PassModule
   end
 
   Pass = Proc.new do |prog|
-    $f = File.open "defs.out", "w+"
     funcs = prog.children_copy.map do |chld|
       Function.new chld
     end
-    funcs.each do |func|
+    puts "INST COUNT:#{funcs.inject(0) do |sum, func|
       func.do_def_use
-      func.print_def_use
-      func.do_dead_code_elim
-      func.print_stmt_req
-      puts
-    end
+      sum + func.do_dead_code_elim
+    end}"
   end
 end
