@@ -4,7 +4,7 @@ module PassModule
 
   def new_print counter
     print_call = Ast::Call.new("printf")
-    print_call.add_param(Ast::StrConst.new("INST_COUNT:%d"))
+    print_call.add_param(Ast::StrConst.new('INST COUNT:%d\n'))
     print_call.add_param(new_acc counter)
     print_stat = Ast::AssignStat.new(print_call)
     print_stat
