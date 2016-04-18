@@ -287,12 +287,6 @@ module PassModule
     puts "INST COUNT:#{funcs.inject(0) do |sum, func|
       func.do_def_use
       func.print_def_use
-      #func.each do |bb|
-        #puts bb.label.c_dump
-        #puts bb.output_defs["var_a"].map{|stmt| stmt.basic_block.label.c_dump.chomp + "\t" + stmt.c_dump}
-        #puts bb.use2def
-        #puts
-      #end
       res = func.do_dead_code_elim
       func.print_stmt_req
       sum + res
