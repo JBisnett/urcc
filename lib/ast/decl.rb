@@ -168,6 +168,7 @@ end
 # storage type---extern or register.
 class Var
   attr_reader :var_name, :var_type
+  attr_accessor :parent
 
   def initialize(name, type)
     @var_name = name

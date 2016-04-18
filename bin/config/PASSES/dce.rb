@@ -187,7 +187,7 @@ module PassModule
         stmt.basic_block = @cur_bb
         if stmt.rhs.instance_of? Ast::Call
           stmt.basic_block.mark stmt
-        elsif stmt.lhs.instance_of? Ast::DerefAcc
+        elsif stmt.lhs.var.parent.id == "prog" #is a global variable
           stmt.basic_block.mark stmt
         else
           stmt.basic_block.unmark stmt

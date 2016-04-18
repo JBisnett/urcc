@@ -28,6 +28,7 @@ module Ast
     def add_sym(sym)
       if sym.is_a?(Decl::Var) 
         add_one_sym(sym)
+        sym.parent = self
       elsif sym.is_a?(Array)
         sym.each do |s|
           add_one_sym(s)
