@@ -32,13 +32,10 @@ module PassModule
     end
     def unmark stmt
       puts "potential error" if @stmt_req[stmt.c_dump] != nil
-      @stmt_req[stmt.c_dump] = :unnecissary
-    end
-    def mark_flow stmt
-      @stmt_req[stmt.c_dump] = :needed_for_flow if @stmt_req[stmt.c_dump] != :necissary
+      @stmt_req[stmt.c_dump] = false
     end
     def mark stmt
-      @stmt_req[stmt.c_dump] = :necissary
+      @stmt_req[stmt.c_dump] = true
     end
     def add_stmt chld
       stmts << chld
@@ -107,17 +104,7 @@ module PassModule
     end
 
     def infect stmt
-      if stmt_req[stmt.c_dump] != :necissary
-        mark stmt
-        hash = @use2def[stmt.c_dump]
-        hash.each do |dump, defi|
-          defi.basic_block.infect defi
-        end
-      end
-    end
-    
-    def infect_flow stmt
-      if stmt_req[stmt.c_dump] != :necissary
+      if stmt_req[stmt.c_dump] != true
         mark stmt
         hash = @use2def[stmt.c_dump]
         hash.each do |dump, defi|
@@ -175,7 +162,7 @@ module PassModule
       case stmt.class.name
       when "Ast::GotoStat"
         stmt.basic_block = @cur_bb
-        stmt.basic_block.mark_flow stmt
+        stmt.basic_block.mark stmt
         fin_bb stmt
       when "Ast::ReturnStat"
         @cur_bb << stmt
@@ -193,7 +180,7 @@ module PassModule
       when "Ast::LabelStat"
         start_bb stmt
         stmt.basic_block = @cur_bb
-        stmt.basic_block.mark_flow stmt
+        stmt.basic_block.mark stmt
       end
     end
 
