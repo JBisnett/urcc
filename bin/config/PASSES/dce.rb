@@ -58,7 +58,14 @@ module PassModule
     end 
     def process_defs
 
-      def add_def a, use
+      def add_use a, use
+        if a.instance_of? Ast::VarAcc
+          if a.dim > 0
+            a.children_copy.each do |chld|
+              add_use chld, use
+            end
+          end
+        end
         @output_defs[a.c_dump].each do |defi|
           @parent.def_use_list["[#{[a.c_dump, defi.c_dump, use.c_dump].map(&:chomp).join", "}]"] = [a, defi, use]
           @use2def[use.c_dump][defi.c_dump] = defi
@@ -67,25 +74,31 @@ module PassModule
 
       reject{|s| s.instance_of?(Ast::LabelStat)}.each do |as|
         if as.instance_of? Ast::AssignStat
+          if as.lhs.instance_of? Ast::DerefAcc
+            add_use as.lhs, as
+          end
           if as.rhs.instance_of? Ast::Call
             as.rhs.para_list_copy.each do |arg| 
-              add_def arg, as
+              add_use arg, as
             end
-          elsif as.rhs.instance_of? Ast::VarAcc
-            add_def as.rhs, as
+          elsif as.rhs.is_a? Ast::VarAcc #cover DerefAcc
+            add_use as.rhs, as
           elsif as.rhs.instance_of? Ast::OpExpr
             if as.rhs.rand2 != nil
-              add_def as.rhs.rand1, as
-              add_def as.rhs.rand2, as
+              add_use as.rhs.rand1, as
+              add_use as.rhs.rand2, as
             elsif
-              add_def as.rhs.rand1, as
+              if as.rhs.rator == '&'
+                @output_defs['*'+as.lhs.c_dump]=[as]
+              end
+              add_use as.rhs.rand1, as
             end
           end
           @output_defs[as.lhs.c_dump] = [as] if as.lhs != nil
         elsif out.instance_of?(Ast::GotoStat)
-          add_def out.condition, out if out.condition != nil
+          add_use out.condition, out if out.condition != nil
         else
-          add_def as.expr, as if as.expr != nil
+          add_use as.expr, as if as.expr != nil
         end
       end
       out_blocks.each{|chld| chld.add_input_hash @output_defs}
@@ -173,6 +186,8 @@ module PassModule
         @cur_bb << stmt
         stmt.basic_block = @cur_bb
         if stmt.rhs.instance_of? Ast::Call
+          stmt.basic_block.mark stmt
+        elsif stmt.lhs.instance_of? Ast::DerefAcc
           stmt.basic_block.mark stmt
         else
           stmt.basic_block.unmark stmt
@@ -271,7 +286,10 @@ module PassModule
     end
     puts "INST COUNT:#{funcs.inject(0) do |sum, func|
       func.do_def_use
-      sum + func.do_dead_code_elim
+      func.print_def_use
+      res = func.do_dead_code_elim
+      func.print_stmt_req
+      sum + res
     end}"
   end
 end
