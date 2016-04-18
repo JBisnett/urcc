@@ -36,8 +36,6 @@ module PassModule
     returns.each do |ret| 
       new_print(counter).insert_me("before", ret)
     end
-    puts main.c_dump
-    p prog
 
   end
 

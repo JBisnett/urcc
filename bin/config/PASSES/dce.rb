@@ -130,7 +130,6 @@ module PassModule
       each do |stmt|
         if @stmt_req[stmt.c_dump] != true
           stmt.detach_me
-        else
           @loc += 1
         end
       end
@@ -186,6 +185,8 @@ module PassModule
         @cur_bb << stmt
         stmt.basic_block = @cur_bb
         if stmt.rhs.instance_of? Ast::Call
+          stmt.basic_block.mark stmt
+        elsif stmt.lhs.instance_of? Ast::DerefAcc
           stmt.basic_block.mark stmt
         elsif stmt.lhs.var.parent.id == "prog" #is a global variable
           stmt.basic_block.mark stmt
@@ -284,9 +285,9 @@ module PassModule
     funcs = prog.children_copy.map do |chld|
       Function.new chld
     end
-    puts "INST COUNT:#{funcs.inject(0) do |sum, func|
+    puts "Removed Code:#{funcs.inject(0) do |sum, func|
       func.do_def_use
-      func.print_def_use
+      #func.print_def_use
       res = func.do_dead_code_elim
       func.print_stmt_req
       sum + res
