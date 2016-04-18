@@ -28,7 +28,7 @@ module PassModule
       @input_defs = Hash.new {|hash, key| hash[key] = Array.new}
       @parent = p
       @stmt_req = Hash.new
-      @use2def = Hash.new {|hash, key| hash[key] = Hash.new}
+      @use2def = Hash.new {|hash, key| hash[key] = Array.new}
     end
     def unmark stmt
       puts "potential error" if @stmt_req[stmt.c_dump] != nil
@@ -68,7 +68,7 @@ module PassModule
         end
         @output_defs[a.c_dump].each do |defi|
           @parent.def_use_list["[#{[a.c_dump, defi.c_dump, use.c_dump].map(&:chomp).join", "}]"] = [a, defi, use]
-          @use2def[use.c_dump][defi.c_dump] = defi
+          @use2def[use.c_dump] = @use2def[use.c_dump] << defi #might need to be an array?
         end
       end
 
@@ -108,7 +108,7 @@ module PassModule
       #puts @stmt_req
       @stmt_req.each do |key, val|
         if val
-          @use2def[key].values.each do |defi|
+          @use2def[key].each do |defi|
             defi.basic_block.infect defi
           end
         end
@@ -118,8 +118,8 @@ module PassModule
     def infect stmt
       if stmt_req[stmt.c_dump] != true
         mark stmt
-        hash = @use2def[stmt.c_dump]
-        hash.each do |dump, defi|
+        arr = @use2def[stmt.c_dump]
+        arr.each do |defi|
           defi.basic_block.infect defi
         end
       end
@@ -244,7 +244,7 @@ module PassModule
           bb.process_defs
         end
         if @def_use_list.keys != @old_def_use_list.keys
-          @def_use_list.keys.each {|s| @old_def_use_list[s] = true}
+          @def_use_list.keys.each {|s| @old_def_use_list[s] = @def_use_list[s]}
           do_def_use_imp
         end
       end
@@ -287,6 +287,12 @@ module PassModule
     puts "INST COUNT:#{funcs.inject(0) do |sum, func|
       func.do_def_use
       func.print_def_use
+      #func.each do |bb|
+        #puts bb.label.c_dump
+        #puts bb.output_defs["var_a"].map{|stmt| stmt.basic_block.label.c_dump.chomp + "\t" + stmt.c_dump}
+        #puts bb.use2def
+        #puts
+      #end
       res = func.do_dead_code_elim
       func.print_stmt_req
       sum + res
